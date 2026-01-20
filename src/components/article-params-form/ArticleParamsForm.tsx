@@ -1,11 +1,11 @@
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
+import clsx from 'clsx';
 import { ArrowButton } from '../../ui/arrow-button';
 import { Button } from '../../ui/button';
 import { RadioGroup } from '../../ui/radio-group';
 import { Select } from '../../ui/select';
 import { Separator } from '../../ui/separator';
 import { Text } from '../../ui/text';
-import { useArticle } from '../../context/ArticleContext';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import {
 	fontFamilyOptions,
@@ -13,39 +13,55 @@ import {
 	backgroundColors,
 	contentWidthArr,
 	fontSizeOptions,
+	ArticleStateType,
+	defaultArticleState,
 } from '../../constants/articleProps';
 import { SPACING } from '../../constants/styles';
 
 import styles from './ArticleParamsForm.module.scss';
 
-export const ArticleParamsForm = () => {
-	const {
-		formState,
-		isSidebarOpen,
-		updateFormState,
-		applyFormState,
-		resetFormState,
-		toggleSidebar,
-		closeSidebar,
-	} = useArticle();
+type ArticleParamsFormProps = {
+	currentArticleState: ArticleStateType;
+	setCurrentArticleState: (state: ArticleStateType) => void;
+};
+
+export const ArticleParamsForm = ({
+	currentArticleState,
+	setCurrentArticleState,
+}: ArticleParamsFormProps) => {
+	const [formState, setFormState] =
+		useState<ArticleStateType>(currentArticleState);
+	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
 	const sidebarRef = useRef<HTMLElement>(null);
 
-	// Закрываем сайдбар при клике вне его области или на Escape
-	useOutsideClick(sidebarRef, () => {
-		if (isSidebarOpen) {
-			closeSidebar();
-		}
-	});
+	useOutsideClick(
+		sidebarRef,
+		() => {
+			setIsSidebarOpen(false);
+		},
+		isSidebarOpen
+	);
+
+	const toggleSidebar = () => {
+		setIsSidebarOpen((prev) => !prev);
+	};
+
+	const updateFormState = (newState: Partial<ArticleStateType>) => {
+		setFormState((prev) => ({ ...prev, ...newState }));
+	};
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		applyFormState();
+		setCurrentArticleState(formState);
+		setIsSidebarOpen(false);
 	};
 
 	const handleReset = (e: React.FormEvent) => {
 		e.preventDefault();
-		resetFormState();
+		setFormState(defaultArticleState);
+		setCurrentArticleState(defaultArticleState);
+		setIsSidebarOpen(false);
 	};
 
 	return (
@@ -53,9 +69,10 @@ export const ArticleParamsForm = () => {
 			<ArrowButton isOpen={isSidebarOpen} onClick={toggleSidebar} />
 			<aside
 				ref={sidebarRef}
-				className={`${styles.container} ${
-					isSidebarOpen ? styles.container_open : ''
-				}`}>
+				className={clsx(
+					styles.container,
+					isSidebarOpen && styles.container_open
+				)}>
 				<form
 					className={styles.form}
 					onSubmit={handleSubmit}

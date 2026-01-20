@@ -2,9 +2,12 @@ import { useEffect, RefObject } from 'react';
 
 export const useOutsideClick = (
 	ref: RefObject<HTMLElement>,
-	callback: () => void
+	callback: () => void,
+	isActive = true
 ) => {
 	useEffect(() => {
+		if (!isActive) return;
+
 		const handleClickOutside = (event: MouseEvent) => {
 			if (ref.current && !ref.current.contains(event.target as Node)) {
 				callback();
@@ -24,5 +27,5 @@ export const useOutsideClick = (
 			document.removeEventListener('mousedown', handleClickOutside);
 			document.removeEventListener('keydown', handleEscape);
 		};
-	}, [ref, callback]);
+	}, [ref, callback, isActive]);
 };
